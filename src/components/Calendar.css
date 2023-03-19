@@ -1,0 +1,28 @@
+:root{
+    --fc-button-bg-color: #a856e7;
+    --fc-button-border-color: #a856e7;
+    --fc-button-hover-bg-color: #b67be2;
+    --fc-button-hover-border-color: #8322ce;
+    --fc-button-active-bg-color: #8036b8; 
+    --fc-button-active-border-color: #8036b8;
+    --fc-today-bg-color: #e7d3f7;
+}
+.fc .fc-toolbar-title {
+    color: #781cbe;
+}
+.fc .fc-button {
+    text-transform: uppercase;
+}
+
+.fc .fc-button .fc-icon {
+    margin-left: auto;
+}
+
+.fc-daygrid-event-dot {
+    border: none;
+    margin: 0;
+}
+.fc-event-time {
+    color: #8322ce;
+    font-weight: bold;
+}
