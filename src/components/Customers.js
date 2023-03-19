@@ -1,4 +1,4 @@
-import {useRef, useState, useEffect, useContext} from "react";
+import {useRef, useState, useContext} from "react";
 import {AgGridReact} from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-material.css";
@@ -9,25 +9,21 @@ import AddTraining from "./AddTraining";
 import DeleteCustomer from "./DeleteCustomer";
 import ExportCSV from "./ExportCSV";
 import {TrainingContext} from "./TrainingContext";
+import useFetchData from "../utils/useFetchData";
 
 export default function Customers() {
-  const [data, setData] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
   const gridRef = useRef();
 
-  const getCustomers = async () => {
-    const response = await fetch(
-      "http://traineeapp.azurewebsites.net/api/customers"
-    )
-      .then((response) => response.json())
-      .catch((err) => console.error(err));
-
-    const customerData = response.content;
-    setData(customerData);
-  };
+  const {
+    data,
+    loading,
+    error,
+    refetch: refetchCustomer,
+  } = useFetchData("http://traineeapp.azurewebsites.net/api/customers");
 
   const handleCustomerAdded = (customer) => {
+    setMessage("Submitting customer");
     fetch("http://traineeapp.azurewebsites.net/api/customers", {
       method: "POST",
       headers: {
@@ -36,11 +32,13 @@ export default function Customers() {
       body: JSON.stringify(customer),
     })
       .then((_) => {
+        refetchCustomer();
         setMessage("Customer Added");
-        setOpen(true);
+        setTimeout(() => {
+          setMessage(null);
+        }, 3000);
       })
-      .then((_) => getCustomers())
-      .catch((err) => console.error(err));
+      .catch(() => setMessage("Submitting Error"));
   };
 
   const handleCustomerEdited = (customer, link) => {
@@ -52,20 +50,18 @@ export default function Customers() {
       body: JSON.stringify(customer),
     })
       .then((_) => {
+        refetchCustomer();
         setMessage("Customer Edited");
-        setOpen(true);
       })
-      .then((_) => getCustomers())
       .catch((err) => console.error(err));
   };
 
   const handleCustomerDeleted = (link) => {
     fetch(link, {method: "DELETE"})
       .then((_) => {
+        refetchCustomer();
         setMessage("Customer Deleted");
-        setOpen(true);
       })
-      .then((_) => getCustomers())
       .catch((err) => console.error(err));
   };
 
@@ -81,19 +77,12 @@ export default function Customers() {
     })
       .then((_) => {
         setMessage("Training Added");
-        setOpen(true);
       })
       .then((_) => refetch())
       .catch((err) => console.error(err));
   };
 
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  useEffect(() => {
-    getCustomers();
-  }, []);
+  const handleClose = () => {};
 
   const columns = [
     {
@@ -186,7 +175,7 @@ export default function Customers() {
       editable: true,
     },
   ];
-
+  console.log(data);
   return (
     <div
       className="ag-theme-material"
@@ -202,8 +191,10 @@ export default function Customers() {
           justifyContent: "flex-end",
         }}>
         <AddCustomer onCustomerAdded={handleCustomerAdded} />
-        <ExportCSV data={data} />
+        {data !== null && <ExportCSV data={data.content} />}
       </div>
+      {loading && <div> Loading customers ... </div>}
+      {error && <div> Error loading customers </div>}
 
       <AgGridReact
         ref={gridRef}
@@ -211,10 +202,10 @@ export default function Customers() {
         rowSelection="single"
         animateRows="true"
         columnDefs={columns}
-        rowData={data}
+        rowData={data !== null ? data.content : []}
       />
       <Snackbar
-        open={open}
+        open={message !== null}
         anchorOrigin={{horizontal: "right", vertical: "bottom"}}
         autoHideDuration={3000}
         onClose={handleClose}
