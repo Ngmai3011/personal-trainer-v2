@@ -1,14 +1,18 @@
 import {BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip} from "recharts";
-import {TrainingContext} from "./TrainingContext";
-import {useContext} from "react";
+import useFetchData from "../utils/useFetchData";
 
 export default function Statistics() {
-  const {data} = useContext(TrainingContext);
+  const {data} = useFetchData(
+    "https://traineeapp.azurewebsites.net/gettrainings"
+  );
+
+  const arrayData = data !== null ? data : [];
+
   const _ = require("lodash");
-  const groupDataByActivity = _.groupBy(data, "activity");
-  const chartData = Object.values(groupDataByActivity).map((data) => ({
-    activity: data[0].activity,
-    duration: _.sumBy(data, "duration"),
+  const groupDataByActivity = _.groupBy(arrayData, "activity");
+  const chartData = Object.values(groupDataByActivity).map((arrayData) => ({
+    activity: arrayData[0].activity,
+    duration: _.sumBy(arrayData, "duration"),
   }));
 
   return (
