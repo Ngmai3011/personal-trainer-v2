@@ -1,4 +1,4 @@
-import {useRef, useState, useContext} from "react";
+import {useRef, useState} from "react";
 import {AgGridReact} from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-material.css";
@@ -8,7 +8,6 @@ import EditCustomer from "./EditCustomer";
 import AddTraining from "./AddTraining";
 import DeleteCustomer from "./DeleteCustomer";
 import ExportCSV from "./ExportCSV";
-import {TrainingContext} from "./TrainingContext";
 import useFetchData from "../utils/useFetchData";
 
 export default function Customers() {
@@ -42,6 +41,7 @@ export default function Customers() {
   };
 
   const handleCustomerEdited = (customer, link) => {
+    setMessage("Editting customer");
     fetch(link, {
       method: "PUT",
       headers: {
@@ -52,22 +52,32 @@ export default function Customers() {
       .then((_) => {
         refetchCustomer();
         setMessage("Customer Edited");
+        setTimeout(() => {
+          setMessage(null);
+        }, 3000);
       })
-      .catch((err) => console.error(err));
+      .catch(() => setMessage("Editting Error"));
   };
 
   const handleCustomerDeleted = (link) => {
+    setMessage("Deleting customer");
     fetch(link, {method: "DELETE"})
       .then((_) => {
         refetchCustomer();
         setMessage("Customer Deleted");
+        setTimeout(() => {
+          setMessage(null);
+        }, 3000);
       })
-      .catch((err) => console.error(err));
+      .catch(() => setMessage("Deleting Error"));
   };
 
-  const {refetch} = useContext(TrainingContext);
+  const {refetch: refetchTraining} = useFetchData(
+    "https://traineeapp.azurewebsites.net/gettrainings"
+  );
 
   const handleTrainingAdded = (training) => {
+    setMessage("Adding training");
     fetch("http://traineeapp.azurewebsites.net/api/trainings", {
       method: "POST",
       headers: {
@@ -77,12 +87,13 @@ export default function Customers() {
     })
       .then((_) => {
         setMessage("Training Added");
+        setTimeout(() => {
+          setMessage(null);
+        }, 3000);
       })
-      .then((_) => refetch())
-      .catch((err) => console.error(err));
+      .then((_) => refetchTraining())
+      .catch(() => setMessage("Training Added Error"));
   };
-
-  const handleClose = () => {};
 
   const columns = [
     {
@@ -175,7 +186,7 @@ export default function Customers() {
       editable: true,
     },
   ];
-  console.log(data);
+
   return (
     <div
       className="ag-theme-material"
@@ -207,8 +218,6 @@ export default function Customers() {
       <Snackbar
         open={message !== null}
         anchorOrigin={{horizontal: "right", vertical: "bottom"}}
-        autoHideDuration={3000}
-        onClose={handleClose}
         message={message}
         ContentProps={{
           sx: {

@@ -1,33 +1,35 @@
-import {useRef, useState, useContext} from "react";
+import {useRef, useState} from "react";
 import {AgGridReact} from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-material.css";
 import Snackbar from "@mui/material/Snackbar";
 import moment from "moment";
 import DeleteTraining from "./DeleteTraining";
-import {TrainingContext} from "./TrainingContext";
+import useFetchData from "../utils/useFetchData";
 
 export default function Trainings() {
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
   const gridRef = useRef();
 
-  const {data, refetch} = useContext(TrainingContext);
+  const {data, loading, error, refetch} = useFetchData(
+    "https://traineeapp.azurewebsites.net/gettrainings"
+  );
+
+  console.log(data);
 
   const handleTrainingDeleted = (trainingId) => {
+    setMessage("Deleting training");
     fetch(`https://traineeapp.azurewebsites.net/api/trainings/${trainingId}`, {
       method: "DELETE",
     })
       .then((_) => {
+        refetch();
         setMessage("Training Deleted");
-        setOpen(true);
+        setTimeout(() => {
+          setMessage(null);
+        }, 3000);
       })
-      .then((_) => refetch())
-      .catch((err) => console.error(err));
-  };
-
-  const handleClose = () => {
-    setOpen(false);
+      .catch(() => setMessage("Deleting Error"));
   };
 
   const columns = [
@@ -86,19 +88,20 @@ export default function Trainings() {
         width: "100%",
         margin: "auto",
       }}>
+      {loading && <div> Loading trainings ... </div>}
+      {error && <div> Error loading trainings </div>}
+
       <AgGridReact
         ref={gridRef}
         onGridReady={(params) => (gridRef.current = params.api)}
         rowSelection="single"
         animateRows="true"
         columnDefs={columns}
-        rowData={data}
+        rowData={data !== null ? data : []}
       />
       <Snackbar
-        open={open}
+        open={message !== null}
         anchorOrigin={{horizontal: "right", vertical: "bottom"}}
-        autoHideDuration={3000}
-        onClose={handleClose}
         message={message}
         ContentProps={{
           sx: {

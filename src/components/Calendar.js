@@ -3,14 +3,16 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import "./Calendar.css";
-import {useContext} from "react";
 import moment from "moment";
-import {TrainingContext} from "./TrainingContext";
+import useFetchData from "../utils/useFetchData";
 
 export default function Calendar() {
-  const {data} = useContext(TrainingContext);
+  const {data} = useFetchData(
+    "https://traineeapp.azurewebsites.net/gettrainings"
+  );
+  const calendarData = data !== null ? data : [];
 
-  const events = data.map((value) => ({
+  const events = calendarData.map((value) => ({
     start: moment(value.date)._d,
     end: moment(value.date).add(value.duration, "m")._d,
     title: `${value.activity} / ${value.customer.firstname} ${value.customer.lastname}`,
